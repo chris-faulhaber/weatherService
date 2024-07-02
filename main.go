@@ -28,16 +28,20 @@ var apiKey string
 var endPoint = "https://api.openweathermap.org/data/2.5/weather"
 
 func main() {
+	//API access KEY from open weather, user supplied
 	apiKey = os.Getenv("WEATHER_API_KEY")
 	if len(apiKey) == 0 {
 		log.Fatal("Required API key not set in environment variable WEATHER_API_KEY")
 	}
 
+	//Setup handler and serve port 8080
 	http.HandleFunc("/weather", weatherHandler)
+	log.Print("Listening on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func weatherHandler(w http.ResponseWriter, r *http.Request) {
+	//Get the two required parameter, lat and long
 	lat, ok := getParam(w, r, "lat")
 	if !ok {
 		return
@@ -48,6 +52,7 @@ func weatherHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//Send Request
 	request := fmt.Sprintf("%s?units=imperial&lat=%s&lon=%s&APPID=%s", endPoint, lat, long, apiKey)
 	log.Println(request)
 
@@ -57,6 +62,7 @@ func weatherHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//Parse response, expecting only a 200 response code otherwise something went wrong.
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
@@ -66,6 +72,7 @@ func weatherHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//Unmarshal response
 	var weatherResponse WeatherResponse
 	err = json.Unmarshal(body, &weatherResponse)
 	if err != nil {
@@ -74,6 +81,7 @@ func weatherHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Print(weatherResponse)
 
+	//These values assume imperial units are used in the request
 	var tempCondition string
 	if weatherResponse.Main.Temp < 33 {
 		tempCondition = "cold"
@@ -83,6 +91,7 @@ func weatherHandler(w http.ResponseWriter, r *http.Request) {
 		tempCondition = "moderate"
 	}
 
+	//Respond to local request
 	response := fmt.Sprintf("The weather condition outside is %s and the tempature is %s", weatherResponse.Weather[0].Description, tempCondition)
 	_, err = w.Write([]byte(response))
 	if err != nil {
