@@ -5,5 +5,5 @@ http://localhost:8080/weather?lat=43.68&long=-70.31
 
 Setup;
 You will need to your own API Key, please see use https://openweathermap.org/faq to get a free one! 
-The environment variable WEATHER_API_KEY
+Then set the environment variable WEATHER_API_KEY
 
